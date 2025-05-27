@@ -1,7 +1,7 @@
 import requests
 import sqlite3
 from bs4 import BeautifulSoup
-
+import pandas as pd
 
 
 class NomePaises:
@@ -170,6 +170,17 @@ class ColetorLivros:
             conexao.commit()
             print("Dados salvos com sucesso no banco de dados")
 
+def gerar_relatorio():
+    con_paises = sqlite3.connect('paises.db')
+    con_livros = sqlite3.connect('livraria.db')
+
+    dados_paises = pd.read_sql(f'SELECT * FROM paises', con_paises)
+    dados_livros = pd.read_sql(f'SELECT * FROM livros', con_livros)
+
+    with pd.ExcelWriter('relatorio.xlsx') as writer:
+        dados_paises.to_excel(writer, sheet_name='Paises', index=False)
+        dados_livros.to_excel(writer, sheet_name='Livros', index=False)
+
 # === Execução principal ===
 '''if __name__ == "__main__":
     coletor_paises = NomePaises()
@@ -179,3 +190,5 @@ class ColetorLivros:
     coletor_livro.salvar_no_banco(livros)
     processador = ProcessadorPaises(lista)
     processador.executar()'''
+
+gerar_relatorio()
