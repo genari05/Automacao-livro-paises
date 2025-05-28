@@ -2,6 +2,7 @@ import requests
 import sqlite3
 from bs4 import BeautifulSoup
 import pandas as pd
+from datetime import datetime
 
 
 class NomePaises:
@@ -169,26 +170,50 @@ class ColetorLivros:
 
             conexao.commit()
             print("Dados salvos com sucesso no banco de dados")
+            
+            
+            
+import sqlite3
+import pandas as pd
+from datetime import datetime
 
-def gerar_relatorio():
-    con_paises = sqlite3.connect('paises.db')
-    con_livros = sqlite3.connect('livraria.db')
+class Relatorio:
+    def __init__(self, autor_fixo="Matheus&Tiago"):
+        self.autores = autor_fixo
 
-    dados_paises = pd.read_sql(f'SELECT * FROM paises', con_paises)
-    dados_livros = pd.read_sql(f'SELECT * FROM livros', con_livros)
+    def gerar_relatorio(self):
+        horario = datetime.now().strftime('%d/%m/%Y %H:%M:%S') # Data e hora do relatório
 
-    with pd.ExcelWriter('relatorio.xlsx') as writer:
-        dados_paises.to_excel(writer, sheet_name='Paises', index=False)
-        dados_livros.to_excel(writer, sheet_name='Livros', index=False)
+        con_paises = sqlite3.connect('paises.db') # Conectando com o banco de dados 
+        con_livros = sqlite3.connect('livraria.db')
+
+        dados_paises = pd.read_sql('SELECT * FROM paises', con_paises) # lendos os os dados do banco de dados 
+        dados_livros = pd.read_sql('SELECT * FROM livros', con_livros)
+
+        info_df = pd.DataFrame({
+            'Informação': ['Data/Hora de geração', 'Gerado por'],
+            'Valor': [horario, self.autores]
+        })
+
+        with pd.ExcelWriter("relatorio.xlsx") as writer:
+            info_df.to_excel(writer, sheet_name='Relatorio', index=False)
+            dados_paises.to_excel(writer, sheet_name='Paises', index=False)
+            dados_livros.to_excel(writer, sheet_name='Livros', index=False)
+
+        print("Relatório gerado com sucesso!")
+
+
+
+
 
 # === Execução principal ===
-'''if __name__ == "__main__":
+if __name__ == "__main__":
     coletor_paises = NomePaises()
     lista = coletor_paises.coletar()
     coletor_livro = ColetorLivros()
     livros = coletor_livro.coletar_livros(quantidade=10)
     coletor_livro.salvar_no_banco(livros)
     processador = ProcessadorPaises(lista)
-    processador.executar()'''
-
-gerar_relatorio()
+    processador.executar()
+    relatorio = Relatorio()
+    relatorio.gerar_relatorio()
